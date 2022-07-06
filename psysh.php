@@ -7,7 +7,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 echo __NAMESPACE__ . " shell\n";
 echo "-----\nexample:\n";
-echo "echo microtime(); echo \"\\n\"; Sleep::seconds(2); echo microtime();\n";
+echo "echo microtime(true); echo \"\\n\"; Sleep::seconds(2); echo microtime(true);\n";
 echo "-----\n\n";
 
 $sh = new \Psy\Shell();

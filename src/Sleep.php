@@ -5,96 +5,91 @@ namespace Shimoning\SleepUtils;
 /**
  * sleep/usleep の発展系
  *
+ * TODO: PHP7.3 以上のサポートにして microtime() から hrtime() に変更し精度を上げる
+ * 現状だとミリ秒までの精度しか出ない
+ *
  * @author Shimon Haga <shimon.haga@shimoning.com>
  */
 class Sleep
 {
-    const KILO = 1000;
-    const MEGA = 1000000;
-    const GIGA = 1000000000;
+    const KILO = 1e3;
+    const MEGA = 1e6;
+    const GIGA = 1e9;
 
     /**
      * 秒単位で処理を遅延させる (PHP 標準の sleep とほぼ同じ)
      *
-     * @param int $t
-     * @return int
+     * @param int|float $t
+     * @return void
      */
-    public static function seconds(int $t)
+    public static function seconds($t)
     {
-        return \sleep(Tool::sanitize($t));
+        $baseMicroSeconds = \microtime(true);
+        $seconds = Tool::positiveFloat($t);
+        self::usleep($seconds * self::MEGA, $baseMicroSeconds);
     }
 
     /**
      * ミリ秒単位で処理を遅延させる
      *
-     * @param int $t
+     * @param int|float $t
      * @return void
      */
-    public static function milliSeconds(int $t)
+    public static function milliSeconds($t)
     {
-        $time = Tool::sanitize($t);
-        if ($time > self::KILO) {
-            // システムによっては 1秒以上 をサポートしないことがある
-            self::seconds(\floor($time / self::KILO));
-            $time %= self::KILO;
-        }
-        return \usleep($time * self::KILO);
+        $baseMicroSeconds = \microtime(true);
+        $milliSeconds = Tool::positiveFloat($t);
+        self::usleep($milliSeconds * self::KILO, $baseMicroSeconds);
     }
 
     /**
      * マイクロ秒単位で処理を遅延させる
      *
-     * @param int $t
+     * @param int|float $t
      * @return void
      */
-    public static function microSeconds(int $t)
+    public static function microSeconds($t)
     {
-        $time = Tool::sanitize($t);
-        if ($time > self::MEGA) {
-            // システムによっては 1秒以上 をサポートしないことがある
-            self::seconds(\floor($time / self::MEGA));
-            $time %= self::MEGA;
-        }
-        return \usleep($time);
+        $baseMicroSeconds = \microtime(true);
+        $microSeconds = Tool::positiveFloat($t);
+        self::usleep($microSeconds, $baseMicroSeconds);
     }
 
     /**
      * ナノ秒単位で処理を遅延させる
      *
-     * @param int $t
+     * @param int|float $t
      * @return array|bool
      */
-    public static function nanoSeconds(int $t)
+    public static function nanoSeconds($t)
     {
-        $time = Tool::sanitize($t);
+        $time = Tool::positiveFloat($t);
         $seconds = \floor($time / self::GIGA);
-        $nanoseconds = $time % self::GIGA;
-        return \time_nanosleep($seconds, $nanoseconds);
+        $nanoSeconds = $time % self::GIGA;
+        return \time_nanosleep($seconds, $nanoSeconds);
     }
 
     /**
-     * 小数が含まれる秒単位で処理を遅延させる
+     * usleep 互換
+     * 精度を少し上げ、小数も引き受けるようにした
      *
-     * @param int|float $t
+     * @param float|int $microSeconds
+     * @param float|null $baseTime
      * @return void
      */
-    public static function decimalSeconds($t)
+    public static function usleep($microSeconds, float $baseMicroSeconds = null)
     {
-        if (! \is_numeric($t) || $t < 0) {
-            // 数値じゃない、もしくは負の時は何もしない
-            return;
+        $targetSeconds = ($baseMicroSeconds ?: \microtime(true)) + $microSeconds / self::MEGA;
+
+        if ($microSeconds > self::MEGA) {
+            // システムによっては 1秒以上 をサポートしないことがある
+            \sleep(\floor($microSeconds / self::MEGA));
         }
 
-        if (\is_int($t)) {
-            // 整数の場合
-            self::seconds($t);
-            return;
+        while (($diffSeconds = $targetSeconds - \microtime(true)) > 0) {
+            if ($diffSeconds < 0.001) {
+                \usleep($diffSeconds * 5e5);
+            }
         }
-
-        // float の場合
-        $time = (float)$t;
-        $seconds = \floor($time);
-        $nanoseconds = \floor(($time - $seconds) * self::GIGA);
-        \time_nanosleep($seconds, $nanoseconds);
     }
 }

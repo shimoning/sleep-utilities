@@ -1,6 +1,11 @@
 # Sleep utilities
 sleep / usleep / time_nanosleep を拡張し、直感的にわかりやすくしたもの。
 
+## Support
+PHP7.0 以上。
+
+将来的には 7.3 以上にする予定 (hrtime を使いたい)。
+
 ## Install
 利用するプロジェクトの `composer.json` に以下を追加する。
 ```composer.json
@@ -27,36 +32,37 @@ composer update shimoning/sleep-utilities
 **秒** を指定して sleep する。
 
 ```php
-Sleep::seconds(5);
+Sleep::seconds(5.5);
 ```
 
 ### Sleep::milliSeconds
 **ミリ秒** を指定して sleep する。
 
 ```php
-Sleep::milliSeconds(20);
+Sleep::milliSeconds(20.30);
 ```
 
 ### Sleep::microSeconds
 **マイクロ秒** を指定して sleep する。
 
 ```php
-Sleep::microSeconds(300);
+Sleep::microSeconds(300.500);
 ```
 
 ### Sleep::nanoSeconds
-**ナノ数** を指定して sleep する。
+**ナノ秒** を指定して sleep する。
 
 ```php
 Sleep::nanoSeconds(120);
 ```
 
-### Sleep::decimalSeconds
-**小数を含む秒** を指定して sleep する。
-整数でも利用可能。
+### Sleep::usleep
+**マイクロ秒** を指定して sleep する。
+PHP 標準の usleep の精度を若干向上し、 int だけでなく float も扱えるようにした。
+seconds, milliSeconds, microSeconds の基盤関数。
 
 ```php
-Sleep::decimalSeconds(3.25);
+Sleep::usleep(300);
 ```
 
 -----

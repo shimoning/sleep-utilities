@@ -3,7 +3,7 @@
     "description": "Sleep utilities",
     "minimum-stability": "stable",
     "type": "library",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "license": "MIT",
     "authors": [
         {
